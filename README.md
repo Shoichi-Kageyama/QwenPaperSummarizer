@@ -18,7 +18,7 @@ git clone https://github.com/Shoichi-Kageyama/QwenPaperSummarizer.git
 cd QwenPaperSummarizer
 conda create -n QwenPaperSummarizer python=3.10
 conda activate QwenPaperSummarizer
-pip instsall -r requirements.txt
+pip install -r requirements.txt
 ```
 
 #### 2.QwenPaperSummarizerリポジトリ内のdatafolderに要約したい論文のPDFを入れる
