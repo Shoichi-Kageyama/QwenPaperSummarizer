@@ -3,11 +3,10 @@
 ## 機能
 
 * Qwen2モデルを使用してpdf化された論文を要約します。
-* PDF→textには **PDFMiner-six** を使用しています
-* あらかじめ決められたプロンプトを用いて論文のtextデータからタイトルと要約をQwenにより生成します。
-* 出力は要約のhtmlファイルです。オプションでtxtファイルも出力します。
+* webアプリとCUI上での２通りの使い方があります。
 
 ##### 注意：LLMの出力は不安定です。期待しない出力をする場合があります。
+
 
 ## セットアップと使い方
 
@@ -21,9 +20,17 @@ conda activate QwenPaperSummarizer
 pip install -r requirements.txt
 ```
 
-#### 2.QwenPaperSummarizerリポジトリ内のdatafolderに要約したい論文のPDFを入れる
+## Webアプリ起動
+#### streamlitで作成されたwebアプリを起動します
+```bash
+streamlit run QPS_webapp.py  
+```
 
-#### 3.CUIでアプリを起動する
+## CUIでアプリ起動
+
+#### 1.datafolderに要約したい論文のPDFを入れる
+
+#### 2.CUIでアプリを起動する
 **datafolder** に **sample.pdf** を置いた場合
 
 

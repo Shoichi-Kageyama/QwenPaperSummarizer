@@ -1,43 +1,8 @@
 import markdown
-from vllm import LLM, SamplingParams
+from vllm import SamplingParams
 import string
-import re
 from pdfminer.high_level import extract_text
 import time
-
-# argv #第一引数：pdfファイルのパス, 第二引数：出力先のhtmlファイルのパス, 第三引数：TIME_N, 第四引数：RETRY_LIMIT 第五引数：output_textfile
-import argparse
-
-model_id = "Qwen/Qwen2-7B-Instruct"
-
-# パラメータの取得
-parser = argparse.ArgumentParser()
-parser.add_argument("pdf_path", help="pdf file path")
-parser.add_argument("--html_path", help="html file path",type=str, default="empty")
-parser.add_argument("--TIME_N", type=int, default=10, help="TIME_N")
-parser.add_argument("--RETRY_LIMIT", type=int, default=3, help="RETRY_LIMIT")
-parser.add_argument("--output_textfile", type=int, default=0, help="output_textfile")
-
-args = parser.parse_args()
-
-pdf_path = args.pdf_path
-
-if args.html_path == "empty":
-    output_html_path = pdf_path.replace(".pdf", ".html")
-else:
-    output_html_path = args.html_path
-
-CUSTOM_TIME_N = int(args.TIME_N)
-CUSTOM_RETRY_LIMIT = int(args.RETRY_LIMIT)
-
-if args.output_textfile == 1:
-    output_textfile = True
-else:
-    output_textfile = False
-
-
-
-
 
 # プロンプトテンプレートの準備
 summarize_template = string.Template("""<|im_start|>system
@@ -73,7 +38,6 @@ ${instruct}<|im_end|>
 Title: '""")
 
 
-
 # FUNCTIONS
 def mark_to_html(md_txt):
     
@@ -88,15 +52,6 @@ def mark_to_html(md_txt):
 def save_html(html, save_path):
     with open(save_path, mode="w", encoding='utf-8') as f:
         f.write(html)
-
-def extract_text_from_pdf(file_path):
-    text = extract_text(file_path)
-    return text
-
-def clean_extracted_text(text):
-    text = text.replace('-\n', '')
-    text = re.sub(r'\s+', ' ', text)
-    return text
 
 def prepare_prompts(template: string.Template, cleaned_text: str, head_num=0):
 
@@ -152,23 +107,10 @@ def outputting_text(llm, prompts, temperature, maxtoken, RETRY_LIMIT, TIME_N):
 
         return outputs[0].outputs[0].text
 
-# MAIN
-if __name__ == "__main__":
-    print("\n\ntarget pdf file path:", pdf_path)
-    # PDFからテキストを抽出
-    extracted_text = extract_text_from_pdf(pdf_path)
-    cleaned_text = clean_extracted_text(extracted_text)
-
-    # cleaned_textが短すぎる場合、エラーを出力
-    if len(cleaned_text) < 100:
-        raise ValueError("The extracted text is too short. Please check the PDF file.")
-
+def run_qps(llm, text, CUSTOM_RETRY_LIMIT=3, CUSTOM_TIME_N=10):
     # タイトルとサマリーのプロンプトの準備
-    title_prompts = prepare_prompts(title_template, cleaned_text, 1000)
-    summarize_prompts = prepare_prompts(summarize_template, cleaned_text, 0)
-
-    # モデルの読み込み
-    llm = LLM(model=model_id)
+    title_prompts = prepare_prompts(title_template, text, 1000)
+    summarize_prompts = prepare_prompts(summarize_template, text, 0)
 
     # タイトルの抽出
     title = llm.generate(
@@ -179,7 +121,7 @@ if __name__ == "__main__":
         )
     )
 
-    title_md = "#"+title[0].outputs[0].text.split("'")[0]+"\n\n"
+    title_md = "# "+title[0].outputs[0].text.split("'")[0]+"\n\n"
     
     # サマリーの抽出
     summary = outputting_text(llm, summarize_prompts, 0.5, 999999, CUSTOM_RETRY_LIMIT, CUSTOM_TIME_N)
@@ -190,17 +132,6 @@ if __name__ == "__main__":
 
     # HTMLに変換
     html = mark_to_html(final_output)
-    save_html(html, output_html_path)
-    print("saved html file :", output_html_path)
-    
 
-    if output_textfile:
-        output_textfile_path = output_html_path.replace(".html",".txt")
-        print("saved text file :", output_textfile_path)
-        # テキストファイルで保存(実験)
-        with open(output_textfile_path, "w") as f:
-            f.write(final_output)
+    return html, final_output
 
-    print("Done")
-
-    
