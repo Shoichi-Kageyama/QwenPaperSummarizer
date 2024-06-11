@@ -1,7 +1,6 @@
 import markdown
 from vllm import SamplingParams
 import string
-from pdfminer.high_level import extract_text
 import time
 
 # プロンプトテンプレートの準備
