@@ -12,7 +12,7 @@ model_id = "Qwen/Qwen2-7B-Instruct"
 CUSTOM_RETRY_LIMIT = 3
 CUSTOM_TIME_N = 10
 
-DEBUG = True
+DEBUG = False
 
 
 @st.cache_resource
