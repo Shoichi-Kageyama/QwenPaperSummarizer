@@ -8,16 +8,28 @@ import os
 
 from QSP_webapp_module import run_qps
 
+
+
+
+# 基本設定
 model_id = "Qwen/Qwen2-7B-Instruct"
 CUSTOM_RETRY_LIMIT = 3
 CUSTOM_TIME_N = 10
 
-DEBUG = True
+# VLLMのGPUメモリ使用率(OUT OF MEMORYになる場合はこの値を小さくする)
+VLLM_GPU_MEMORY_UTILIZATION = 0.7
+
+# デバッグモード
+DEBUG = False
+
+
+
 
 
 @st.cache_resource
 def load_model(model_id):
-    llm = LLM(model_id)
+    global VLLM_GPU_MEMORY_UTILIZATION
+    llm = LLM(model_id, gpu_memory_utilization=VLLM_GPU_MEMORY_UTILIZATION)
     return llm
 
 def render():
@@ -103,7 +115,7 @@ def render():
 
                 # 範囲指定がstart==1 end==maxpagenum 以外の場合,　pdfの範囲を指定して上書き保存
                 if st.session_state.pdfpage_start_num != 1 or st.session_state.pdfpage_end_num != st.session_state.maxpagenum:
-                    print("pdf merge start:", st.session_state.pdfpage_start_num-1 , " to ", st.session_state.pdfpage_end_num)
+                    print("pdf merge start:", st.session_state.pdfpage_start_num , " to ", st.session_state.pdfpage_end_num)
                     merger = pypdf.PdfWriter()
                     merger.append(pdf_path, pages=(st.session_state.pdfpage_start_num-1, st.session_state.pdfpage_end_num))
                     merger.write(pdf_path)
